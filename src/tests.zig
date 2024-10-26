@@ -11,7 +11,8 @@ inline fn stderr() std.fs.File.Writer {
 const Tester = struct {
     cpu: z80.CPU,
     failed: bool = false,
-    memory: [0x10000]u8 = [_]u8 { 0 } ** 0x10000,
+    memory: [0x10000]u8 = [_]u8{0} ** 0x10000,
+    const Self = @This();
 
     fn read(self: *Tester, addr: u16) u8 {
         return self.memory[addr];
@@ -46,9 +47,14 @@ const Tester = struct {
 
     fn run(rom: []const u8, expected_cycles: u64) !void {
         // tester object
-        var self = Tester{ .cpu = undefined };
+        var self = Self{ .cpu = undefined };
+        // const T: Tester = undefined;
+        // var self = T;
+
         // store COM file starting at 100h
-        std.mem.copy(u8, self.memory[0x100..], rom);
+        // std.mem.copyForwards(u8, self.memory[0x100..], rom);
+        @memcpy(self.memory[0x100..], rom);
+
         // cp/m warm boot function:
         self.memory[0x0000] = 0x76; // halt
         // cp/m bdos function:
@@ -83,9 +89,9 @@ const Tester = struct {
 };
 
 test "documented instructions" {
-    try Tester.run(@embedFile("tests/zexdoc.com"), 46734978642);
+        try Tester.run(@embedFile("./testdata/zexdoc.com"), 46734978642);
 }
 
 test "all instructions" {
-    try Tester.run(@embedFile("tests/zexall.com"), 46734978642);
+    try Tester.run(@embedFile("./testdata/zexall.com"), 46734978642);
 }

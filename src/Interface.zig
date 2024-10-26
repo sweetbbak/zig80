@@ -58,10 +58,13 @@ pub fn init(
 ) Interface {
     const Ptr = @TypeOf(pointer);
     const alignment = @alignOf(@TypeOf(pointer.*));
+    _ = alignment; // autofix
+    // _ = alignment; // autofix
 
     const gen = struct {
         inline fn cast(ptr: *anyopaque) Ptr {
-            return @ptrCast(Ptr, @alignCast(alignment, ptr));
+            return @as(Ptr, @ptrCast(@as(alignment, @alignCast(ptr))));
+            // return @ptrCast(Ptr, @alignCast(alignment, ptr));
         }
 
         fn readImpl(ptr: *anyopaque, addr: u16) u8 {
