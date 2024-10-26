@@ -21,13 +21,14 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const main_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
+        .root_source_file = b.path("src/tests.zig"),
         .target = target,
         .optimize = optimize,
     });
 
     // test files are GPL licensed, so they are excluded from the distribution
-    const download_tests = b.addSystemCommand(&.{ "python", "tools/download_tests.py", "src/tests" });
+    // const download_tests = b.addSystemCommand(&.{ "python", "tools/download_tests.py", "src/tests" });
+    const download_tests = b.addSystemCommand(&.{ "bash", "tools/download_tests.sh", "src/tests" });
     main_tests.step.dependOn(&download_tests.step);
 
     const test_step = b.step("test", "Run library tests");

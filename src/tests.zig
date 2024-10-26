@@ -89,9 +89,9 @@ const Tester = struct {
 };
 
 test "documented instructions" {
-        try Tester.run(@embedFile("./testdata/zexdoc.com"), 46734978642);
+        try Tester.run(@embedFile("./tests/zexdoc.com"), 46734978642);
 }
 
 test "all instructions" {
-    try Tester.run(@embedFile("./testdata/zexall.com"), 46734978642);
+    try Tester.run(@embedFile("./tests/zexall.com"), 46734978642);
 }
