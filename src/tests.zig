@@ -45,11 +45,19 @@ const Tester = struct {
         }
     }
 
+    fn interface(self: *Tester) z80.Interface {
+        return z80.Interface.init(self, .{
+            .read = read,
+            .write = write,
+            .out = out,
+        });
+    }
+
     fn run(rom: []const u8, expected_cycles: u64) !void {
-        // tester object
-        var self = Self{ .cpu = undefined };
-        // const T: Tester = undefined;
-        // var self = T;
+        var self: Tester = .{ .cpu = undefined };
+        var cpu = z80.CPU{ .interface = self.interface() };
+        cpu.pc = 0x100;
+        self.cpu = cpu;
 
         // store COM file starting at 100h
         // std.mem.copyForwards(u8, self.memory[0x100..], rom);
@@ -61,35 +69,44 @@ const Tester = struct {
         self.memory[0x0005] = 0xd3; // out  (0),a ; trigger i/o callback
         self.memory[0x0006] = 0x00; //
         self.memory[0x0007] = 0xc9; // ret
-        // z80 cpu
-        self.cpu = .{
-            .interface = z80.Interface.init(&self, .{
-                .read = read,
-                .write = write,
-                .out = out,
-            }),
-            .pc = 0x100,
-        };
         // check for cycle accuracy
         var actual_cycles: u64 = 0;
+
         while (!self.cpu.halted) {
             // step cpu, add to total cycle count
             self.cpu.step();
             actual_cycles += self.cpu.cycles;
             self.cpu.cycles = 0;
         }
+
         // if the exerciser reported at least one error, then fail
         if (self.failed) {
             std.debug.print("one or more tests failed\n", .{});
             return error.TestFailed;
         }
+
         // check for cycle accuracy
         try std.testing.expectEqual(expected_cycles, actual_cycles);
     }
 };
 
+// object to implement read callback
+const Computer = struct {
+    // cpu: z80.CPU,
+    failed: bool = false,
+    memory: [0x10000]u8 = [_]u8{0} ** 0x10000,
+
+    fn read(self: *Computer, addr: u16) u8 {
+        return self.mem[addr];
+    }
+
+    fn interface(self: *Computer) z80.Interface {
+        return z80.Interface.init(self, .{ .read = read });
+    }
+};
+
 test "documented instructions" {
-        try Tester.run(@embedFile("./tests/zexdoc.com"), 46734978642);
+    try Tester.run(@embedFile("./tests/zexdoc.com"), 46734978642);
 }
 
 test "all instructions" {

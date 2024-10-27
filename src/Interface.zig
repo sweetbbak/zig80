@@ -5,17 +5,17 @@ vtable: *const VTable,
 
 pub const VTable = struct {
     /// Read from memory.
-    read: fn(ptr: *anyopaque, addr: u16) u8,
+    read: *const fn(ptr: *anyopaque, addr: u16) u8,
     /// Write to memory.
-    write: fn(ptr: *anyopaque, addr: u16, value: u8) void,
+    write: *const fn(ptr: *anyopaque, addr: u16, value: u8) void,
     /// Read data for a maskable interrupt (address low byte for mode 2, opcode byte(s) for mode 0)
-    irq: fn(ptr: *anyopaque) u8,
+    irq: *const fn(ptr: *anyopaque) u8,
     /// Read from I/O.
-    in: fn(ptr: *anyopaque, port: u16) u8,
+    in: *const fn(ptr: *anyopaque, port: u16) u8,
     /// Write to I/O.
-    out: fn(ptr: *anyopaque, port: u16, value: u8) void,
+    out: *const fn(ptr: *anyopaque, port: u16, value: u8) void,
     /// Called when an interrupt routine is completed.
-    reti: fn(ptr: *anyopaque) void,
+    reti: *const fn(ptr: *anyopaque) void,
 };
 
 fn writeDefault(ptr: *anyopaque, addr: u16, value: u8) void {
@@ -57,13 +57,13 @@ pub fn init(
     },
 ) Interface {
     const Ptr = @TypeOf(pointer);
-    const alignment = @alignOf(@TypeOf(pointer.*));
-    _ = alignment; // autofix
+    // const alignment = @alignOf(@TypeOf(pointer));
     // _ = alignment; // autofix
 
     const gen = struct {
         inline fn cast(ptr: *anyopaque) Ptr {
-            return @as(Ptr, @ptrCast(@as(alignment, @alignCast(ptr))));
+            // return @as(Ptr, @ptrCast(@as(alignment, @alignCast(ptr))));
+            return @alignCast(@ptrCast(ptr));
             // return @ptrCast(Ptr, @alignCast(alignment, ptr));
         }
 
