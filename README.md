@@ -1,6 +1,6 @@
 # zig80 - z80 emulator
 
-zig80 is a Z80 emulator written in Zig.
+zig80 is a Z80 emulator written in Zig. (updated to work with Zig versions 0.13.0 to 0.14.0-dev)
 
 ## Features
 
@@ -13,7 +13,7 @@ For a demo of this library, see <https://github.com/spazzylemons/zig-pacman>
 
 ```zig
 const std = @import("std");
-const z80 = @import("zig80");
+const z80 = @import("z80");
 
 // object to implement read callback
 const Computer = struct {
