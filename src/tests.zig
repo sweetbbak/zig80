@@ -14,36 +14,36 @@ const Tester = struct {
     memory: [0x10000]u8 = [_]u8{0} ** 0x10000,
     const Self = @This();
 
-    fn read(self: *Tester, addr: u16) u8 {
-        return self.memory[addr];
-    }
-
-    fn write(self: *Tester, addr: u16, value: u8) void {
-        self.memory[addr] = value;
-    }
-
-    fn out(self: *Tester, port: u16, value: u8) void {
-        _ = port;
-        _ = value;
-        switch (self.cpu.getC()) {
-            // e = char to print
-            2 => {
-                const char = self.cpu.getE();
-                stderr().writeByte(char) catch {};
-            },
-            // de = '$'-terminated string
-            9 => {
-                const addr = self.cpu.getDE();
-                const str = std.mem.sliceTo(self.memory[addr..], '$');
-                // if string contains "ERROR", then a test failed
-                if (std.mem.indexOf(u8, str, "ERROR") != null) {
-                    self.failed = true;
-                }
-                stderr().writeAll(str) catch {};
-            },
-            else => {},
-        }
-    }
+    // fn read(self: *Tester, addr: u16) u8 {
+    //     return self.memory[addr];
+    // }
+    //
+    // fn write(self: *Tester, addr: u16, value: u8) void {
+    //     self.memory[addr] = value;
+    // }
+    //
+    // fn out(self: *Tester, port: u16, value: u8) void {
+    //     _ = port;
+    //     _ = value;
+    //     switch (self.cpu.getC()) {
+    //         // e = char to print
+    //         2 => {
+    //             const char = self.cpu.getE();
+    //             stderr().writeByte(char) catch {};
+    //         },
+    //         // de = '$'-terminated string
+    //         9 => {
+    //             const addr = self.cpu.getDE();
+    //             const str = std.mem.sliceTo(self.memory[addr..], '$');
+    //             // if string contains "ERROR", then a test failed
+    //             if (std.mem.indexOf(u8, str, "ERROR") != null) {
+    //                 self.failed = true;
+    //             }
+    //             stderr().writeAll(str) catch {};
+    //         },
+    //         else => {},
+    //     }
+    // }
 
     fn run(rom: []const u8, expected_cycles: u64) !void {
         // tester object
@@ -63,11 +63,11 @@ const Tester = struct {
         self.memory[0x0007] = 0xc9; // ret
         // z80 cpu
         self.cpu = .{
-            .interface = z80.Interface.init(&self, .{
-                .read = read,
-                .write = write,
-                .out = out,
-            }),
+            // .interface = z80.Interface.init(&self, .{
+            //     .read = read,
+            //     .write = write,
+            //     .out = out,
+            // }),
             .pc = 0x100,
         };
         // check for cycle accuracy

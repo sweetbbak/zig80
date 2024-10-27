@@ -58,8 +58,6 @@ pub fn init(
 ) Interface {
     const Ptr = @TypeOf(pointer);
     const alignment = @alignOf(@TypeOf(pointer.*));
-    _ = alignment; // autofix
-    // _ = alignment; // autofix
 
     const gen = struct {
         inline fn cast(ptr: *anyopaque) Ptr {

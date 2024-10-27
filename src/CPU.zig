@@ -1,9 +1,10 @@
 //! The Z80 CPU.
+const std = @import("std");
 const CPU = @This();
 
 const pkg = @import("zig80.zig");
 const Flags = pkg.Flags;
-const Interface = pkg.Interface;
+// const Interface = pkg.Interface;
 const InterruptMode = pkg.InterruptMode;
 
 /// The extra cycle counts for the main instructions
@@ -90,7 +91,10 @@ inline fn loByte(w: u16) u8 {
     return @truncate(w);
 }
 
-interface: Interface,
+// interface: Interface,
+// const Interface = @import("io.zig");
+// interface: Interface,
+memory: [0x10000]u8 = [_]u8{0} ** 0x10000,
 
 af: Pair = .{ .w = 0xffff },
 bc: Pair = .{ .w = 0 },
@@ -121,6 +125,7 @@ int_delay: bool = false,
 int_read: bool = false,
 ld_ir: bool = false,
 halted: bool = false,
+failed: bool = false,
 
 index_type: enum { HL, IX, IY } = .HL,
 
@@ -128,7 +133,7 @@ cycles: u32 = 0,
 
 fn readByte(self: *CPU, addr: u16) u8 {
     self.addCycles(3);
-    return self.interface.read(addr);
+    return self.read(addr);
 }
 
 inline fn readWord(self: *CPU, addr: u16) u16 {
@@ -144,7 +149,7 @@ fn readWordMemPtr(self: *CPU) u16 {
 
 fn writeByte(self: *CPU, addr: u16, value: u8) void {
     self.addCycles(3);
-    return self.interface.write(addr, value);
+    return self.write(addr, value);
 }
 
 inline fn writeWord(self: *CPU, addr: u16, value: u16) void {
@@ -159,17 +164,18 @@ fn writeWordMemPtr(self: *CPU, value: u16) void {
 
 fn in(self: *CPU, port: u16) u8 {
     self.addCycles(4);
-    return self.interface.in(port);
+    return self.in(port);
 }
 
 fn out(self: *CPU, port: u16, value: u8) void {
     self.addCycles(4);
-    return self.interface.out(port, value);
+    return self._out(port, value);
 }
 
+// TODO: move irq
 fn fetchByte(self: *CPU) u8 {
     if (self.int_read) {
-        return self.interface.irq();
+        return self.irq();
     } else {
         self.pc +%= 1;
         return self.readByte(self.pc -% 1);
@@ -917,7 +923,7 @@ fn rrd(self: *CPU) void {
 
 fn reti(self: *CPU) void {
     self.retn();
-    self.interface.reti();
+    self.reti();
 }
 
 fn retn(self: *CPU) void {
@@ -1556,8 +1562,12 @@ fn extended(self: *CPU) void {
     }
 }
 
+pub fn irq(self: *CPU) u8 {
+    _ = self;
+    return 0;
+}
 /// Attempt to perform a maskable interrupt. Returns true if the interrupt was acknowledged.
-pub fn irq(self: *CPU) bool {
+pub fn _irq(self: *CPU) bool {
     // request ignored if interrupts disabled or if not yet ready
     if (self.int_delay or !self.iff1) return false;
     // set up for response
@@ -1580,7 +1590,7 @@ pub fn irq(self: *CPU) bool {
         .Mode2 => {
             self.addCycles(7);
             self.refresh();
-            const indirect = word(self.i, self.interface.irq());
+            const indirect = word(self.i, self.irq());
             const address = self.readWord(indirect);
             self.call(address);
         },
@@ -1616,4 +1626,40 @@ pub fn reset(self: *CPU) void {
     self.sp = 0xffff;
     self.setAF(0xffff);
     self.addCycles(3);
+}
+
+
+inline fn stderr() std.fs.File.Writer {
+    return std.io.getStdErr().writer();
+}
+
+pub fn read(self: *CPU, addr: u16) u8 {
+    return self.memory[addr];
+}
+
+pub fn write(self: *CPU, addr: u16, value: u8) void {
+    self.memory[addr] = value;
+}
+
+pub fn _out(self: *CPU, port: u16, value: u8) void {
+    _ = port;
+    _ = value;
+    switch (self.getC()) {
+        // e = char to print
+        2 => {
+            const char = self.getE();
+            stderr().writeByte(char) catch {};
+        },
+        // de = '$'-terminated string
+        9 => {
+            const addr = self.getDE();
+            const str = std.mem.sliceTo(self.memory[addr..], '$');
+            // if string contains "ERROR", then a test failed
+            if (std.mem.indexOf(u8, str, "ERROR") != null) {
+                self.failed = true;
+            }
+            stderr().writeAll(str) catch {};
+        },
+        else => {},
+    }
 }

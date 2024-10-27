@@ -11,6 +11,6 @@ pub const Flags = struct {
     pub const S: u8 = 1 << 7;
 };
 
-pub const Interface = @import("Interface.zig");
+// pub const Interface = @import("Interface.zig");
 
 pub const InterruptMode = enum { Mode0, Mode1, Mode2 };
