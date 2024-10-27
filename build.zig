@@ -5,23 +5,33 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "test",
-        .root_source_file = b.path("src/main.zig"),
+    const module = b.addModule("z80", .{
+        .root_source_file = b.path("src/zig80.zig"),
+    });
+
+    const lib = b.addStaticLibrary(.{
+        .name = "z80",
+        .root_source_file = b.path("src/zig80.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    b.installArtifact(exe);
+    b.installArtifact(lib);
 
+    const exe = b.addExecutable(.{
+        .target = target,
+        .name = "cpu",
+        .root_source_file = b.path("examples/main.zig"),
+        .optimize = optimize,
+    });
+
+    exe.root_module.addImport("z80", module);
+
+    b.installArtifact(exe);
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
+    const run_step = b.step("run", "Run the example app");
     run_step.dependOn(&run_cmd.step);
 
     const main_tests = b.addTest(.{
