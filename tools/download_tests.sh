@@ -35,6 +35,7 @@ if [ ! "$IS_DOWNLOADED" -eq 1 ]; then
         CPM.zip.1
         CPM.zip.2
         CPM.zip.3
+        CPM.zip.4
     )
 
     for part in "${cleanup[@]}"; do

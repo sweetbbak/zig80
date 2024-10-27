@@ -48,8 +48,6 @@ const Tester = struct {
     fn run(rom: []const u8, expected_cycles: u64) !void {
         // tester object
         var self = Self{ .cpu = undefined };
-        // const T: Tester = undefined;
-        // var self = T;
 
         // store COM file starting at 100h
         // std.mem.copyForwards(u8, self.memory[0x100..], rom);

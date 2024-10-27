@@ -1,6 +1,8 @@
-const Interface = @This();
+const Self = @This();
 
+// reference to an any type
 ptr: *anyopaque,
+// an implemntation of a table of functions
 vtable: *const VTable,
 
 pub const VTable = struct {
@@ -47,7 +49,7 @@ fn retiDefault(ptr: *anyopaque) void {
 
 pub fn init(
     pointer: anytype,
-    comptime vtable: struct {
+    vtable: struct {
         read: fn(self: @TypeOf(pointer), addr: u16) u8,
         write: ?fn(self: @TypeOf(pointer), addr: u16, value: u8) void = null,
         irq: ?fn(self: @TypeOf(pointer)) u8 = null,
@@ -55,7 +57,7 @@ pub fn init(
         out: ?fn(self: @TypeOf(pointer), port: u16, value: u8) void = null,
         reti: ?fn(self: @TypeOf(pointer)) void = null,
     },
-) Interface {
+) Self {
     const Ptr = @TypeOf(pointer);
     const alignment = @alignOf(@TypeOf(pointer.*));
 
@@ -105,26 +107,26 @@ pub fn init(
     };
 }
 
-pub inline fn read(self: Interface, addr: u16) u8 {
+pub inline fn read(self: Self, addr: u16) u8 {
     return self.vtable.read(self.ptr, addr);
 }
 
-pub inline fn write(self: Interface, addr: u16, value: u8) void {
+pub inline fn write(self: Self, addr: u16, value: u8) void {
     return self.vtable.write(self.ptr, addr, value);
 }
 
-pub inline fn irq(self: Interface) u8 {
+pub inline fn irq(self: Self) u8 {
     return self.vtable.irq(self.ptr);
 }
 
-pub inline fn in(self: Interface, port: u16) u8 {
+pub inline fn in(self: Self, port: u16) u8 {
     return self.vtable.in(self.ptr, port);
 }
 
-pub inline fn out(self: Interface, port: u16, value: u8) void {
+pub inline fn out(self: Self, port: u16, value: u8) void {
     return self.vtable.out(self.ptr, port, value);
 }
 
-pub inline fn reti(self: Interface) void {
+pub inline fn reti(self: Self) void {
     return self.vtable.reti(self.ptr);
 }
