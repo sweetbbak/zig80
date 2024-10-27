@@ -5,17 +5,17 @@ vtable: *const VTable,
 
 pub const VTable = struct {
     /// Read from memory.
-    read: *const fn(ptr: *anyopaque, addr: u16) u8,
+    read: *const fn (ptr: *anyopaque, addr: u16) u8,
     /// Write to memory.
-    write: *const fn(ptr: *anyopaque, addr: u16, value: u8) void,
+    write: *const fn (ptr: *anyopaque, addr: u16, value: u8) void,
     /// Read data for a maskable interrupt (address low byte for mode 2, opcode byte(s) for mode 0)
-    irq: *const fn(ptr: *anyopaque) u8,
+    irq: *const fn (ptr: *anyopaque) u8,
     /// Read from I/O.
-    in: *const fn(ptr: *anyopaque, port: u16) u8,
+    in: *const fn (ptr: *anyopaque, port: u16) u8,
     /// Write to I/O.
-    out: *const fn(ptr: *anyopaque, port: u16, value: u8) void,
+    out: *const fn (ptr: *anyopaque, port: u16, value: u8) void,
     /// Called when an interrupt routine is completed.
-    reti: *const fn(ptr: *anyopaque) void,
+    reti: *const fn (ptr: *anyopaque) void,
 };
 
 fn writeDefault(ptr: *anyopaque, addr: u16, value: u8) void {
@@ -48,12 +48,12 @@ fn retiDefault(ptr: *anyopaque) void {
 pub fn init(
     pointer: anytype,
     comptime vtable: struct {
-        read: fn(self: @TypeOf(pointer), addr: u16) u8,
-        write: ?fn(self: @TypeOf(pointer), addr: u16, value: u8) void = null,
-        irq: ?fn(self: @TypeOf(pointer)) u8 = null,
-        in: ?fn(self: @TypeOf(pointer), port: u16) u8 = null,
-        out: ?fn(self: @TypeOf(pointer), port: u16, value: u8) void = null,
-        reti: ?fn(self: @TypeOf(pointer)) void = null,
+        read: fn (self: @TypeOf(pointer), addr: u16) u8,
+        write: ?fn (self: @TypeOf(pointer), addr: u16, value: u8) void = null,
+        irq: ?fn (self: @TypeOf(pointer)) u8 = null,
+        in: ?fn (self: @TypeOf(pointer), port: u16) u8 = null,
+        out: ?fn (self: @TypeOf(pointer), port: u16, value: u8) void = null,
+        reti: ?fn (self: @TypeOf(pointer)) void = null,
     },
 ) Interface {
     const Ptr = @TypeOf(pointer);
